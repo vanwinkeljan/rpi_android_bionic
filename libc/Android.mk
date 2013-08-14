@@ -150,7 +150,6 @@ libc_common_src_files := \
 	bionic/ldexp.c \
 	bionic/lseek64.c \
 	bionic/md5.c \
-	bionic/memchr.c \
 	bionic/memmem.c \
 	bionic/memrchr.c \
 	bionic/memswap.c \
@@ -231,6 +230,13 @@ libc_common_src_files := \
 	netbsd/nameser/ns_netint.c \
 	netbsd/nameser/ns_print.c \
 	netbsd/nameser/ns_samedomain.c \
+
+# cortex-a9 without neon
+ifneq ($(TARGET_CPU_VARIANT),tegra2)
+    libc_common_src_files += \
+        bionic/memchr.c \
+
+endif
 
 libc_bionic_src_files := \
     bionic/assert.cpp \
@@ -381,8 +387,6 @@ libc_static_common_src_files := \
 ifeq ($(TARGET_ARCH),arm)
 libc_common_src_files += \
 	string/strncmp.c \
-#	bionic/memmove.c.arm \
-#	string/bcopy.c \
 
 # These files need to be arm so that gdbserver
 # can set breakpoints in them without messing
