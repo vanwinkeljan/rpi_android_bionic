@@ -112,9 +112,9 @@ extern int __set_tls(void *ptr);
   * completely.
   */
 #      define __get_tls() \
-    ({ register unsigned int __val asm("r0"); \
-       asm ("mrc p15, 0, r0, c13, c0, 3" : "=r"(__val) ); \
-       (volatile void*)__val; })
+    ({ register unsigned int __val; \
+       asm ("mrc p15, 0, %0, c13, c0, 3" : "=r"(__val)); \
+       (volatile void*) __val; })
 #    else /* !HAVE_ARM_TLS_REGISTER */
  /* The kernel provides the address of the TLS at a fixed
   * address of the magic page too.
@@ -124,15 +124,12 @@ extern int __set_tls(void *ptr);
 #  endif /* !LIBC_STATIC */
 #elif defined(__mips__)
 #    define __get_tls() \
-    ({ register unsigned int __val asm("v1");   \
-        asm (                                   \
-            "   .set    push\n"                 \
-            "   .set    mips32r2\n"             \
-            "   rdhwr   %0,$29\n"               \
-            "   .set    pop\n"                  \
-            : "=r"(__val)                       \
-            );                                  \
-        (volatile void*)__val; })
+    ({ register unsigned int __val; \
+       asm ("   .set    push\n" \
+            "   .set    mips32r2\n" \
+            "   rdhwr   %0,$29\n" \
+            "   .set    pop\n" : "=r"(__val)); \
+       (volatile void*) __val; })
 #elif defined(__i386__)
 # define __get_tls() \
     ({ register void* __val; \
