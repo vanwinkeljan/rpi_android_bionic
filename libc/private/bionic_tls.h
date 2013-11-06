@@ -76,7 +76,12 @@ enum {
  * maintain that second number, but pthread_test will fail if we forget.
  */
 #define GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT 4
-#define BIONIC_TLS_SLOTS 128
+/*
+ * This is PTHREAD_KEYS_MAX + TLS_SLOT_FIRST_USER_SLOT + GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT
+ * rounded up to maintain stack alignment.
+ */
+#define BIONIC_ALIGN(x, a) (((x) + (a - 1)) & ~(a - 1))
+#define BIONIC_TLS_SLOTS BIONIC_ALIGN(128 + TLS_SLOT_FIRST_USER_SLOT + GLOBAL_INIT_THREAD_LOCAL_BUFFER_COUNT, 4)
 
 /* syscall only, do not call directly */
 extern int __set_tls(void *ptr);
@@ -123,8 +128,9 @@ extern int __set_tls(void *ptr);
 #    endif
 #  endif /* !LIBC_STATIC */
 #elif defined(__mips__)
-#    define __get_tls() \
-    ({ register unsigned int __val; \
+# define __get_tls() \
+    /* On mips32r1, this goes via a kernel illegal instruction trap that's optimized for v1. */ \
+    ({ register unsigned int __val asm("v1"); \
        asm ("   .set    push\n" \
             "   .set    mips32r2\n" \
             "   rdhwr   %0,$29\n" \
@@ -138,9 +144,6 @@ extern int __set_tls(void *ptr);
 #else
 #error unsupported architecture
 #endif
-
-/* return the stack base and size, used by our malloc debugger */
-extern void* __get_stack_base(int* p_stack_size);
 
 __END_DECLS
 
